@@ -29,12 +29,15 @@ import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
 
-
+/**
+ * Identifies and adds correct emoji to face
+ */
 class Emojifier {
 
     private static final String LOG_TAG = Emojifier.class.getSimpleName();
 
     // Enum for all possible Emojis
+    // TODO Colt doesn't like enums: https://www.youtube.com/watch?v=Hzs6OBcvNQE
     private enum Emoji {
         SMILE,
         SAD,
@@ -46,7 +49,7 @@ class Emojifier {
     }
 
     /**
-     * Method for detecting faces in an image and drawing the most similar emoji
+     * Detects faces in an image and draws the most similar emoji
      *
      * @param context Application context
      * @param picture The Bitmap to scan for the faces
@@ -74,7 +77,7 @@ class Emojifier {
         for (int i = 0; i < faces.size(); ++i) {
             Face face = faces.valueAt(i);
 
-            // Determine most appropriate emoji and and set t to emojiBitmap
+            // Determine most appropriate emoji and and set to emojiBitmap
             Bitmap emojiBitmap;
             switch (whichEmoji(face)) {
                 case SMILE:
@@ -119,7 +122,7 @@ class Emojifier {
     }
 
     /**
-     * Helper method for determining the closest emoji to the expression on the face, based on the
+     * Determines the closest emoji to the expression on the face, based on the
      * odds that the person is smiling and has each eye open
      *
      * @param face The face on which to draw the emoji
@@ -127,13 +130,13 @@ class Emojifier {
      */
     private static Emoji whichEmoji(Face face) {
 
-        // Log all the detected probablities
+        // Log all the detected probabilities
         Log.d(LOG_TAG, "whichEmoji: smilingProb: " + face.getIsSmilingProbability() +
                 " / leftEyeOpenProb: " + face.getIsLeftEyeOpenProbability() +
                 " / rightEyeOpenProb: " + face.getIsRightEyeOpenProbability());
 
         // Determine the smiling and frowning thresholds
-        boolean smiling = face.getIsSmilingProbability() > .15;
+        boolean smiling = face.getIsSmilingProbability() > .15; // TODO consider making these constant values that can be tweaked above
         boolean frowning = face.getIsSmilingProbability() < .01;
 
         // Determine the eyes closed thresholds
@@ -170,7 +173,7 @@ class Emojifier {
     }
 
     /**
-     * Helper method for combining the original picture with the emoji bitmaps
+     * Combines the original picture with the emoji bitmaps
      *
      * @param backgroundBitmap The original picture
      * @param emojiBitmap      The chosen emoji
@@ -184,7 +187,7 @@ class Emojifier {
                 backgroundBitmap.getHeight(), backgroundBitmap.getConfig());
 
         // Scale the emoji so it looks better on the face
-        float scaleFactor = .9f;
+        float scaleFactor = .9f; // TODO create constant for this
 
         // Determine the size of the emoji to match the width of the face and preserve aspect ratio
         int newEmojiWidth = (int) (face.getWidth() * scaleFactor);
@@ -203,7 +206,7 @@ class Emojifier {
 
         // Create the canvas and draw the bitmaps to it
         Canvas canvas = new Canvas(resultBitmap);
-        canvas.drawBitmap(backgroundBitmap, new Matrix(), null);
+        canvas.drawBitmap(backgroundBitmap, new Matrix(), null); // TODO what's the matrix for?
         canvas.drawBitmap(emojiBitmap, emojiPositionX, emojiPositionY, null);
 
         return resultBitmap;

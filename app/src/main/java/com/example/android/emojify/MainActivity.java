@@ -61,9 +61,9 @@ public class MainActivity extends AppCompatActivity {
     private ImageView mImageView;
 
     private Button mEmojifyButton;
-    private FloatingActionButton mShareButton;
-    private FloatingActionButton mSaveButton;
-    private FloatingActionButton mClearButton;
+    private FloatingActionButton mShareFab;
+    private FloatingActionButton mSaveFab;
+    private FloatingActionButton mClearFab;
 
     private TextView mTitleTextView;
 
@@ -84,9 +84,9 @@ public class MainActivity extends AppCompatActivity {
         mImageView = (ImageView) findViewById(R.id.image_view);
 
         mEmojifyButton = (Button) findViewById(R.id.emojify_button);
-        mSaveButton = (FloatingActionButton) findViewById(R.id.save_button);
-        mShareButton = (FloatingActionButton) findViewById(R.id.share_button);
-        mClearButton = (FloatingActionButton) findViewById(R.id.clear_button);
+        mSaveFab = (FloatingActionButton) findViewById(R.id.save_button);
+        mShareFab = (FloatingActionButton) findViewById(R.id.share_button);
+        mClearFab = (FloatingActionButton) findViewById(R.id.clear_button);
 
         mTitleTextView = (TextView) findViewById(R.id.title_text_view);
 
@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * OnClick method for "Emojify Me!" Button
+     * OnClick method for "Emojify Me!" Button. Launches the camera app
      *
      * @param view The emojify button
      */
@@ -176,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Helper method to create the temporary image file in the cache directory
+     * Creates the temporary image file in the cache directory
      *
      * @return The temp image file
      * @throws IOException Thrown if there is an error creating the file
@@ -220,9 +220,9 @@ public class MainActivity extends AppCompatActivity {
         // Toggle Visibility of the views
         mEmojifyButton.setVisibility(View.GONE);
         mTitleTextView.setVisibility(View.GONE);
-        mSaveButton.setVisibility(View.VISIBLE);
-        mShareButton.setVisibility(View.VISIBLE);
-        mClearButton.setVisibility(View.VISIBLE);
+        mSaveFab.setVisibility(View.VISIBLE);
+        mShareFab.setVisibility(View.VISIBLE);
+        mClearFab.setVisibility(View.VISIBLE);
 
         // Resample the saved image to fit the ImageView
         Bitmap picture = resamplePic();
@@ -235,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Helper method fir resampling the captured photo to fit the screen for better memeory usage
+     * Resamples the captured photo to fit the screen for better memory usage
      *
      * @return The resampled bitmap
      */
@@ -271,7 +271,6 @@ public class MainActivity extends AppCompatActivity {
      * @param view The save button
      */
     public void saveMe(View view) {
-        // Save the image
         saveImage();
     }
 
@@ -303,9 +302,9 @@ public class MainActivity extends AppCompatActivity {
         mImageView.setImageResource(0);
         mEmojifyButton.setVisibility(View.VISIBLE);
         mTitleTextView.setVisibility(View.VISIBLE);
-        mShareButton.setVisibility(View.GONE);
-        mSaveButton.setVisibility(View.GONE);
-        mClearButton.setVisibility(View.GONE);
+        mShareFab.setVisibility(View.GONE);
+        mSaveFab.setVisibility(View.GONE);
+        mClearFab.setVisibility(View.GONE);
 
         // If the temporary file still exists, delete it
         deleteTempImageFile();
@@ -351,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Helper method for deleting the cached image file
+     * Deletes the cached image file
      */
     private void deleteTempImageFile() {
         // Get the file
