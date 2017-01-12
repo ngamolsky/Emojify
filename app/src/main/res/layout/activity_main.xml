@@ -30,8 +30,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="@dimen/view_margin"
-        android:scaleType="fitStart"
-        android:contentDescription="@string/imageview_description"/>
+        android:contentDescription="@string/imageview_description"
+        android:scaleType="fitStart" />
 
 
     <TextView
