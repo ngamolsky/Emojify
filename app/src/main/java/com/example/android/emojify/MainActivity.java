@@ -91,9 +91,9 @@ public class MainActivity extends AppCompatActivity {
         mTitleTextView = (TextView) findViewById(R.id.title_text_view);
 
         // Restore image on configuration change
-        if(savedInstanceState!=null){
+        if (savedInstanceState != null) {
             mTempPhotoPath = savedInstanceState.getString(FILE_PATH_KEY);
-            if(mTempPhotoPath !=null) {
+            if (mTempPhotoPath != null) {
                 processAndSetImage();
             }
         }
@@ -101,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * OnClick method for "Emojify Me!" Button
+     *
      * @param view The emojify button
      */
     public void emojifyMe(View view) {
@@ -121,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+            @NonNull int[] grantResults) {
         // Called when you request permission to read and write to external storage
         switch (requestCode) {
             case REQUEST_STORAGE_PERMISSION: {
@@ -176,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Helper method to create the temporary image file in the cache directory
+     *
      * @return The temp image file
      * @throws IOException Thrown if there is an error creating the file
      */
@@ -190,7 +192,6 @@ public class MainActivity extends AppCompatActivity {
                 ".jpg",         /* suffix */
                 storageDir      /* directory */
         );
-
 
 
         // Save a file: path for use with ACTION_VIEW intents
@@ -214,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Method for processing the captured image and setting it to the TextView
      */
-    private void processAndSetImage(){
+    private void processAndSetImage() {
 
         // Toggle Visibility of the views
         mEmojifyButton.setVisibility(View.GONE);
@@ -235,9 +236,10 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Helper method fir resampling the captured photo to fit the screen for better memeory usage
+     *
      * @return The resampled bitmap
      */
-    private Bitmap resamplePic(){
+    private Bitmap resamplePic() {
 
         // Get device screen size information
         DisplayMetrics metrics = new DisplayMetrics();
@@ -254,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
         int photoH = bmOptions.outHeight;
 
         // Determine how much to scale down the image
-        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
+        int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
 
         // Decode the image file into a Bitmap sized to fill the View
         bmOptions.inJustDecodeBounds = false;
@@ -265,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * OnClick method for the save button
+     *
      * @param view The save button
      */
     public void saveMe(View view) {
@@ -274,6 +277,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * OnClick method for the share button, saves and shares the new bitmap
+     *
      * @param view The share button
      */
     public void shareMe(View view) {
@@ -291,6 +295,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * OnClick for the clear button, resets the app to original state
+     *
      * @param view The clear button
      */
     public void clearImage(View view) {
@@ -309,20 +314,22 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Helper method for saving the image
      */
-    private void saveImage(){
+    private void saveImage() {
 
         // Create the new file in the external storage
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss",
                 Locale.getDefault()).format(new Date());
         String imageFileName = "JPEG_" + timeStamp + ".jpg";
-        File storageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Emojify");
+        File storageDir = new File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                        + "/Emojify");
         boolean success = true;
-        if(!storageDir.exists()) {
+        if (!storageDir.exists()) {
             success = storageDir.mkdirs();
         }
 
         // Save the new Bitmap
-        if(success) {
+        if (success) {
             File imageFile = new File(storageDir, imageFileName);
             mResultPhotoPath = imageFile.getAbsolutePath();
             try {
@@ -346,14 +353,14 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Helper method for deleting the cached image file
      */
-    private void deleteTempImageFile(){
+    private void deleteTempImageFile() {
         // Get the file
         File imageFile = new File(mTempPhotoPath);
 
         boolean deleted;
 
         // Check if the temp file is already deleted
-        if(!mIsTempDeleted) {
+        if (!mIsTempDeleted) {
             // If not, delete it
             deleted = imageFile.delete();
 
@@ -371,7 +378,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         //Save the temp image file path
-        if(mTempPhotoPath !=null){
+        if (mTempPhotoPath != null) {
             outState.putString(FILE_PATH_KEY, mTempPhotoPath);
         }
     }
