@@ -303,10 +303,7 @@ public class MainActivity extends AppCompatActivity {
         mClearButton.setVisibility(View.GONE);
 
         // If the temporary file still exists, delete it
-        if(!mIsTempDeleted) {
-            deleteTempImageFile();
-            mIsTempDeleted = true;
-        }
+        deleteTempImageFile();
     }
 
     /**
@@ -337,10 +334,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // If the temporary file still exists, delete it
-            if(!mIsTempDeleted) {
-                deleteTempImageFile();
-                mIsTempDeleted = true;
-            }
+            deleteTempImageFile();
+
 
             // Show a Toast with the save location
             String savedMessage = getString(R.string.saved_message, mResultPhotoPath);
@@ -350,7 +345,6 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Helper method for deleting the cached image file
-     * @return Boolean indicating if the file was deleted.
      */
     private void deleteTempImageFile(){
         // Get the file
@@ -358,7 +352,9 @@ public class MainActivity extends AppCompatActivity {
 
         boolean deleted;
 
+        // Check if the temp file is already deleted
         if(!mIsTempDeleted) {
+            // If not, delete it
             deleted = imageFile.delete();
 
             // If there is an error deleting the file, show a Toast
@@ -366,7 +362,7 @@ public class MainActivity extends AppCompatActivity {
                 String errorMessage = getString(R.string.error);
                 Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
             } else {
-
+                // Change the status of te file to deleted
                 mIsTempDeleted = true;
             }
         }
@@ -374,6 +370,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        //Save the temp image file path
         if(mTempPhotoPath !=null){
             outState.putString(FILE_PATH_KEY, mTempPhotoPath);
         }
