@@ -32,7 +32,7 @@ import com.google.android.gms.vision.face.FaceDetector;
 
 class Emojifier {
 
-    private static final String TAG = Emojifier.class.getSimpleName();
+    private static final String LOG_TAG = Emojifier.class.getSimpleName();
 
     // Enum for all possible Emojis
     private enum Emoji {
@@ -65,7 +65,7 @@ class Emojifier {
 
         // Detect the faces
         SparseArray<Face> faces = detector.detect(frame);
-        Log.d(TAG, "detectAndDrawFaces: numFaces: " + faces.size());
+        Log.d(LOG_TAG, "detectAndDrawFaces: numFaces: " + faces.size());
 
         // Initialize result bitmap to original picture
         Bitmap resultBitmap = picture;
@@ -128,7 +128,7 @@ class Emojifier {
     private static Emoji whichEmoji(Face face) {
 
         // Log all the detected probablities
-        Log.d(TAG, "whichEmoji: smilingProb: " + face.getIsSmilingProbability() +
+        Log.d(LOG_TAG, "whichEmoji: smilingProb: " + face.getIsSmilingProbability() +
                 " / leftEyeOpenProb: " + face.getIsLeftEyeOpenProbability() +
                 " / rightEyeOpenProb: " + face.getIsRightEyeOpenProbability());
 

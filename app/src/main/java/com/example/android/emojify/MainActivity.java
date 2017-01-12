@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int REQUEST_STORAGE_PERMISSION = 1;
 
-    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final String FILE_PROVIDER_AUTHORITY = "com.example.android.fileprovider";
     private static final String FILE_PATH_KEY = "file_path";
 
@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                     launchCamera();
                 } else {
                     // If you do not get permission, log it and show a Toast
-                    Log.d(TAG, "onRequestPermissionsResult: PERMISSION DENIED");
+                    Log.d(LOG_TAG, "onRequestPermissionsResult: PERMISSION DENIED");
                     Toast.makeText(this, R.string.permission_denied, Toast.LENGTH_SHORT).show();
                 }
                 break;
