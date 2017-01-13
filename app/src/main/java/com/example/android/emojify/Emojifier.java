@@ -21,7 +21,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
-import android.util.Log;
 import android.util.SparseArray;
 import android.widget.Toast;
 
@@ -29,12 +28,12 @@ import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
 
+import timber.log.Timber;
+
 /**
  * Identifies and adds correct emoji to face
  */
 class Emojifier {
-
-    private static final String LOG_TAG = Emojifier.class.getSimpleName();
 
     // Enum for all possible Emojis
     // TODO Colt doesn't like enums: https://www.youtube.com/watch?v=Hzs6OBcvNQE
@@ -68,7 +67,9 @@ class Emojifier {
 
         // Detect the faces
         SparseArray<Face> faces = detector.detect(frame);
-        Log.d(LOG_TAG, "detectAndDrawFaces: numFaces: " + faces.size());
+
+        // Log the number of faces
+        Timber.d("numFaces: " + faces.size());
 
         // Initialize result bitmap to original picture
         Bitmap resultBitmap = picture;
@@ -131,9 +132,9 @@ class Emojifier {
     private static Emoji whichEmoji(Face face) {
 
         // Log all the detected probabilities
-        Log.d(LOG_TAG, "whichEmoji: smilingProb: " + face.getIsSmilingProbability() +
-                " / leftEyeOpenProb: " + face.getIsLeftEyeOpenProbability() +
-                " / rightEyeOpenProb: " + face.getIsRightEyeOpenProbability());
+        Timber.d("smilingProb: " + face.getIsSmilingProbability());
+        Timber.d("rightEyeOpenProb: " + face.getIsRightEyeOpenProbability());
+        Timber.d("leftEyeOpenProb: " + face.getIsLeftEyeOpenProbability());
 
         // Determine the smiling and frowning thresholds
         boolean smiling = face.getIsSmilingProbability() > .15; // TODO consider making these constant values that can be tweaked above
@@ -168,6 +169,9 @@ class Emojifier {
                 emoji = Emoji.NEUTRAL;
             }
         }
+
+        // Log the chosen Emoji
+        Timber.d(emoji.name());
 
         return emoji;
     }

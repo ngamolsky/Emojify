@@ -49,6 +49,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import timber.log.Timber;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -57,22 +62,23 @@ public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final String FILE_PROVIDER_AUTHORITY = "com.example.android.fileprovider";
     private static final String FILE_PATH_KEY = "file_path";
+    private static final String DELETE_STATE_KEY = "delete_state";
 
-    private ImageView mImageView;
+    @BindView(R.id.image_view) ImageView mImageView;
 
-    private Button mEmojifyButton;
-    private FloatingActionButton mShareFab;
-    private FloatingActionButton mSaveFab;
-    private FloatingActionButton mClearFab;
+    @BindView(R.id.emojify_button) Button mEmojifyButton;
+    @BindView(R.id.share_button) FloatingActionButton mShareFab;
+    @BindView(R.id.save_button) FloatingActionButton mSaveFab;
+    @BindView(R.id.clear_button) FloatingActionButton mClearFab;
 
-    private TextView mTitleTextView;
+    @BindView(R.id.title_text_view) TextView mTitleTextView;
 
     private String mTempPhotoPath;
     private String mResultPhotoPath;
 
     private Bitmap mResultsBitmap;
 
-    private Boolean mIsTempDeleted = false;
+    private Boolean mIsTempDeleted;
 
 
     @Override
@@ -80,19 +86,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize Views
-        mImageView = (ImageView) findViewById(R.id.image_view);
+        mIsTempDeleted = false;
 
-        mEmojifyButton = (Button) findViewById(R.id.emojify_button);
-        mSaveFab = (FloatingActionButton) findViewById(R.id.save_button);
-        mShareFab = (FloatingActionButton) findViewById(R.id.share_button);
-        mClearFab = (FloatingActionButton) findViewById(R.id.clear_button);
+        // Bind the views
+        ButterKnife.bind(this);
 
-        mTitleTextView = (TextView) findViewById(R.id.title_text_view);
+        // Set up Timber
+        Timber.plant(new Timber.DebugTree());
 
         // Restore image on configuration change
         if (savedInstanceState != null) {
             mTempPhotoPath = savedInstanceState.getString(FILE_PATH_KEY);
+
             if (mTempPhotoPath != null) {
                 processAndSetImage();
             }
@@ -101,10 +106,9 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * OnClick method for "Emojify Me!" Button. Launches the camera app
-     *
-     * @param view The emojify button
      */
-    public void emojifyMe(View view) {
+    @OnClick(R.id.emojify_button)
+    public void emojifyMe() {
         // Check for the external storage permission
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -204,6 +208,7 @@ public class MainActivity extends AppCompatActivity {
         // If the image capture activity was called and was successful
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             // Process the image to detect faces and draw the appropriate emoji
+            mIsTempDeleted = false;
             processAndSetImage();
         } else {
 
@@ -267,19 +272,17 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * OnClick method for the save button
-     *
-     * @param view The save button
      */
-    public void saveMe(View view) {
+    @OnClick(R.id.save_button)
+    public void saveMe() {
         saveImage();
     }
 
     /**
      * OnClick method for the share button, saves and shares the new bitmap
-     *
-     * @param view The share button
      */
-    public void shareMe(View view) {
+    @OnClick(R.id.share_button)
+    public void shareMe() {
         // Save the new bitmap
         saveImage();
 
@@ -294,10 +297,9 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * OnClick for the clear button, resets the app to original state
-     *
-     * @param view The clear button
      */
-    public void clearImage(View view) {
+    @OnClick(R.id.clear_button)
+    public void clearImage() {
         // Clear the image and toggle the view visibility
         mImageView.setImageResource(0);
         mEmojifyButton.setVisibility(View.VISIBLE);
@@ -363,22 +365,30 @@ public class MainActivity extends AppCompatActivity {
             // If not, delete it
             deleted = imageFile.delete();
 
+
             // If there is an error deleting the file, show a Toast
             if (!deleted) {
                 String errorMessage = getString(R.string.error);
                 Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
             } else {
-                // Change the status of te file to deleted
+                // Change the status of the file to deleted
                 mIsTempDeleted = true;
             }
         }
+
+        // Log deletion status
+        Timber.d("delete path:" + mTempPhotoPath);
+        Timber.d("deleted: " + mIsTempDeleted);
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        //Save the temp image file path
+        // Save the temp image file path
         if (mTempPhotoPath != null) {
             outState.putString(FILE_PATH_KEY, mTempPhotoPath);
         }
+
+        // Save the deletedState of the temp file
+        outState.putBoolean(DELETE_STATE_KEY, mIsTempDeleted);
     }
 }
