@@ -344,12 +344,29 @@ public class MainActivity extends AppCompatActivity {
             // If the temporary file still exists, delete it
             deleteTempImageFile();
 
+            // Add the image to the system gallery
+            galleryAddPic(mResultPhotoPath);
+
 
             // Show a Toast with the save location
             String savedMessage = getString(R.string.saved_message, mResultPhotoPath);
             Toast.makeText(this, savedMessage, Toast.LENGTH_SHORT).show();
         }
     }
+
+    /**
+     * Helper method for adding the photo to the system photo gallery so it can be accessed
+     * from other apps
+     * @param photoPath The path of the saved image
+     */
+    private void galleryAddPic(String photoPath) {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(photoPath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        this.sendBroadcast(mediaScanIntent);
+    }
+
 
     /**
      * Deletes the cached image file
