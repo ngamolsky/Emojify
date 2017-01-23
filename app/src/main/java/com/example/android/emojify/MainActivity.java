@@ -22,18 +22,14 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
-import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -41,12 +37,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -59,8 +50,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_STORAGE_PERMISSION = 1;
 
     private static final String FILE_PROVIDER_AUTHORITY = "com.example.android.fileprovider";
-    private static final String FILE_PATH_KEY = "file_path";
-    private static final String DELETE_STATE_KEY = "delete_state";
 
     @BindView(R.id.image_view) ImageView mImageView;
 
@@ -72,11 +61,8 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.title_text_view) TextView mTitleTextView;
 
     private String mTempPhotoPath;
-    private String mResultPhotoPath;
 
     private Bitmap mResultsBitmap;
-
-    private Boolean mIsTempDeleted;
 
 
     @Override
@@ -84,26 +70,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mIsTempDeleted = false;
-
         // Bind the views
         ButterKnife.bind(this);
 
         // Set up Timber
         Timber.plant(new Timber.DebugTree());
-
-        // Restore image on configuration change
-        if (savedInstanceState != null) {
-            mTempPhotoPath = savedInstanceState.getString(FILE_PATH_KEY);
-
-            if (mTempPhotoPath != null) {
-                processAndSetImage();
-            }
-        }
     }
 
     /**
-     * OnClick method for "Emojify Me!" Button. Launches the camera app
+     * OnClick method for "Emojify Me!" Button. Launches the camera app.
      */
     @OnClick(R.id.emojify_button)
     public void emojifyMe() {
@@ -143,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Creates a temporary image file and captures a picture to store in it
+     * Creates a temporary image file and captures a picture to store in it.
      */
     private void launchCamera() {
 
@@ -152,10 +127,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            // Create the File where the photo should go
+            // Create the temporary File where the photo should go
             File photoFile = null;
             try {
-                photoFile = createTempImageFile();
+                photoFile = BitmapUtils.createTempImageFile(this);
             } catch (IOException ex) {
                 // Error occurred while creating the File
                 ex.printStackTrace();
@@ -163,7 +138,10 @@ public class MainActivity extends AppCompatActivity {
             // Continue only if the File was successfully created
             if (photoFile != null) {
 
-                //Get the content URI for the image file
+                // Get the path of the temporary file
+                mTempPhotoPath = photoFile.getAbsolutePath();
+
+                // Get the content URI for the image file
                 Uri photoURI = getUriForFile(this,
                         FILE_PROVIDER_AUTHORITY,
                         photoFile);
@@ -177,46 +155,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Creates the temporary image file in the cache directory
-     *
-     * @return The temp image file
-     * @throws IOException Thrown if there is an error creating the file
-     */
-    private File createTempImageFile() throws IOException {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss",
-                Locale.getDefault()).format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getExternalCacheDir();
-
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
-
-
-        // Save a file: path for use with ACTION_VIEW intents
-        mTempPhotoPath = image.getAbsolutePath();
-        return image;
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // If the image capture activity was called and was successful
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             // Process the image to detect faces and draw the appropriate emoji
-            mIsTempDeleted = false;
             processAndSetImage();
         } else {
 
             // Otherwise, delete the temporary image file
-            deleteTempImageFile();
+            BitmapUtils.deleteImageFile(this, mTempPhotoPath);
         }
     }
 
     /**
-     * Method for processing the captured image and setting it to the TextView
+     * Method for processing the captured image and setting it to the TextView.
      */
     private void processAndSetImage() {
 
@@ -228,73 +182,45 @@ public class MainActivity extends AppCompatActivity {
         mClearFab.setVisibility(View.VISIBLE);
 
         // Resample the saved image to fit the ImageView
-        Bitmap picture = resamplePic();
+        mResultsBitmap = BitmapUtils.resamplePic(this, mTempPhotoPath);
 
         // Detect faces and draw appropriate emoji on top of the image.
-        mResultsBitmap = Emojifier.detectAndDrawFaces(this, picture);
+        mResultsBitmap = Emojifier.detectAndDrawFaces(this, mResultsBitmap);
 
         // Set the new bitmap to the ImageView
         mImageView.setImageBitmap(mResultsBitmap);
     }
 
-    /**
-     * Resamples the captured photo to fit the screen for better memory usage
-     *
-     * @return The resampled bitmap
-     */
-    private Bitmap resamplePic() {
-
-        // Get device screen size information
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
-        int targetH = metrics.heightPixels;
-        int targetW = metrics.widthPixels;
-
-        // Get the dimensions of the original bitmap
-        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-        bmOptions.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(mTempPhotoPath, bmOptions);
-        int photoW = bmOptions.outWidth;
-        int photoH = bmOptions.outHeight;
-
-        // Determine how much to scale down the image
-        int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
-
-        // Decode the image file into a Bitmap sized to fill the View
-        bmOptions.inJustDecodeBounds = false;
-        bmOptions.inSampleSize = scaleFactor;
-
-        return BitmapFactory.decodeFile(mTempPhotoPath);
-    }
 
     /**
-     * OnClick method for the save button
+     * OnClick method for the save button.
      */
     @OnClick(R.id.save_button)
     public void saveMe() {
-        saveImage();
+        // Delete the temporary image file
+        BitmapUtils.deleteImageFile(this, mTempPhotoPath);
+
+        // Save the image
+        BitmapUtils.saveImage(this, mResultsBitmap);
     }
 
     /**
-     * OnClick method for the share button, saves and shares the new bitmap
+     * OnClick method for the share button, saves and shares the new bitmap.
      */
     @OnClick(R.id.share_button)
     public void shareMe() {
-        // Save the new bitmap
-        saveImage();
+        // Delete the temporary image file
+        BitmapUtils.deleteImageFile(this, mTempPhotoPath);
 
-        // Create the share intent and start the share activity
-        File imageFile = new File(mResultPhotoPath);
-        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.setType("image/*");
-        Uri photoURI = FileProvider.getUriForFile(this, FILE_PROVIDER_AUTHORITY, imageFile);
-        shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
-        startActivity(shareIntent);
+        // Save the image
+        BitmapUtils.saveImage(this, mResultsBitmap);
+
+        // Share the image
+        BitmapUtils.shareImage(this, mTempPhotoPath);
     }
 
     /**
-     * OnClick for the clear button, resets the app to original state
+     * OnClick for the clear button, resets the app to original state.
      */
     @OnClick(R.id.clear_button)
     public void clearImage() {
@@ -306,101 +232,7 @@ public class MainActivity extends AppCompatActivity {
         mSaveFab.setVisibility(View.GONE);
         mClearFab.setVisibility(View.GONE);
 
-        // If the temporary file still exists, delete it
-        deleteTempImageFile();
-    }
-
-    /**
-     * Helper method for saving the image
-     */
-    private void saveImage() {
-
-        // Create the new file in the external storage
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss",
-                Locale.getDefault()).format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + ".jpg";
-        File storageDir = new File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                        + "/Emojify");
-        boolean success = true;
-        if (!storageDir.exists()) {
-            success = storageDir.mkdirs();
-        }
-
-        // Save the new Bitmap
-        if (success) {
-            File imageFile = new File(storageDir, imageFileName);
-            mResultPhotoPath = imageFile.getAbsolutePath();
-            try {
-                OutputStream fOut = new FileOutputStream(imageFile);
-                mResultsBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
-                fOut.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            // If the temporary file still exists, delete it
-            deleteTempImageFile();
-
-            // Add the image to the system gallery
-            galleryAddPic(mResultPhotoPath);
-
-
-            // Show a Toast with the save location
-            String savedMessage = getString(R.string.saved_message, mResultPhotoPath);
-            Toast.makeText(this, savedMessage, Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    /**
-     * Helper method for adding the photo to the system photo gallery so it can be accessed
-     * from other apps
-     * @param photoPath The path of the saved image
-     */
-    private void galleryAddPic(String photoPath) {
-        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        File f = new File(photoPath);
-        Uri contentUri = Uri.fromFile(f);
-        mediaScanIntent.setData(contentUri);
-        this.sendBroadcast(mediaScanIntent);
-    }
-
-
-    /**
-     * Deletes the cached image file
-     */
-    private void deleteTempImageFile() {
-        // Get the file
-        File imageFile = new File(mTempPhotoPath);
-
-        boolean deleted;
-
-        // Check if the temp file is already deleted
-        if (!mIsTempDeleted) {
-            // If not, delete it
-            deleted = imageFile.delete();
-
-
-            // If there is an error deleting the file, show a Toast
-            if (!deleted) {
-                String errorMessage = getString(R.string.error);
-                Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
-            } else {
-                // Change the status of the file to deleted
-                mIsTempDeleted = true;
-            }
-        }
-
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        // Save the temp image file path
-        if (mTempPhotoPath != null) {
-            outState.putString(FILE_PATH_KEY, mTempPhotoPath);
-        }
-
-        // Save the deletedState of the temp file
-        outState.putBoolean(DELETE_STATE_KEY, mIsTempDeleted);
+        // Delete the temporary image file
+        BitmapUtils.deleteImageFile(this, mTempPhotoPath);
     }
 }

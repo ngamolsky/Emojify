@@ -39,17 +39,6 @@ class Emojifier {
     private static final double FROWNING_PROB_THRESHOLD = .01;
     private static final double EYE_OPEN_PROB_THRESHOLD = .5;
 
-    // Enum for all possible Emojis
-    private enum Emoji {
-        SMILE,
-        SAD,
-        NEUTRAL,
-        LEFT_WINK,
-        RIGHT_WINK,
-        CLOSED_SMILE,
-        CLOSED_FROWN
-    }
-
     /**
      * Detects faces in an image and draws the most similar emoji
      *
@@ -217,5 +206,16 @@ class Emojifier {
         canvas.drawBitmap(emojiBitmap, emojiPositionX, emojiPositionY, null);
 
         return resultBitmap;
+    }
+
+    // Enum for all possible Emojis
+    private enum Emoji {
+        SMILE,
+        SAD,
+        NEUTRAL,
+        LEFT_WINK,
+        RIGHT_WINK,
+        CLOSED_SMILE,
+        CLOSED_FROWN
     }
 }
