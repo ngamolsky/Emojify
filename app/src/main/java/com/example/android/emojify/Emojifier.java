@@ -20,7 +20,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.util.SparseArray;
 import android.widget.Toast;
 
@@ -35,8 +34,12 @@ import timber.log.Timber;
  */
 class Emojifier {
 
+    private static final float EMOJI_SCALE_FACTOR = .9f;
+    private static final double SMILING_PROB_THRESHOLD = .15;
+    private static final double FROWNING_PROB_THRESHOLD = .01;
+    private static final double EYE_OPEN_PROB_THRESHOLD = .5;
+
     // Enum for all possible Emojis
-    // TODO Colt doesn't like enums: https://www.youtube.com/watch?v=Hzs6OBcvNQE
     private enum Emoji {
         SMILE,
         SAD,
@@ -137,16 +140,16 @@ class Emojifier {
         Timber.d("leftEyeOpenProb: " + face.getIsLeftEyeOpenProbability());
 
         // Determine the smiling and frowning thresholds
-        boolean smiling = face.getIsSmilingProbability() > .15; // TODO consider making these constant values that can be tweaked above
-        boolean frowning = face.getIsSmilingProbability() < .01;
+        boolean smiling = face.getIsSmilingProbability() > SMILING_PROB_THRESHOLD;
+        boolean frowning = face.getIsSmilingProbability() < FROWNING_PROB_THRESHOLD;
 
         // Determine the eyes closed thresholds
-        boolean leftEyeWink = (face.getIsLeftEyeOpenProbability() < .5) &&
-                (face.getIsRightEyeOpenProbability() > .5);
-        boolean rightEyeWink = (face.getIsRightEyeOpenProbability() < .5) &&
-                (face.getIsLeftEyeOpenProbability() > .5);
-        boolean bothEyesClosed = (face.getIsLeftEyeOpenProbability() < .5) &&
-                (face.getIsRightEyeOpenProbability() < .5);
+        boolean leftEyeWink = (face.getIsLeftEyeOpenProbability() < EYE_OPEN_PROB_THRESHOLD) &&
+                (face.getIsRightEyeOpenProbability() > EYE_OPEN_PROB_THRESHOLD);
+        boolean rightEyeWink = (face.getIsRightEyeOpenProbability() < EYE_OPEN_PROB_THRESHOLD) &&
+                (face.getIsLeftEyeOpenProbability() > EYE_OPEN_PROB_THRESHOLD);
+        boolean bothEyesClosed = (face.getIsLeftEyeOpenProbability() < EYE_OPEN_PROB_THRESHOLD) &&
+                (face.getIsRightEyeOpenProbability() < EYE_OPEN_PROB_THRESHOLD);
 
         // Determine and return the appropriate emoji
         Emoji emoji;
@@ -191,7 +194,7 @@ class Emojifier {
                 backgroundBitmap.getHeight(), backgroundBitmap.getConfig());
 
         // Scale the emoji so it looks better on the face
-        float scaleFactor = .9f; // TODO create constant for this
+        float scaleFactor = EMOJI_SCALE_FACTOR;
 
         // Determine the size of the emoji to match the width of the face and preserve aspect ratio
         int newEmojiWidth = (int) (face.getWidth() * scaleFactor);
@@ -210,7 +213,7 @@ class Emojifier {
 
         // Create the canvas and draw the bitmaps to it
         Canvas canvas = new Canvas(resultBitmap);
-        canvas.drawBitmap(backgroundBitmap, new Matrix(), null); // TODO what's the matrix for?
+        canvas.drawBitmap(backgroundBitmap, 0, 0, null);
         canvas.drawBitmap(emojiBitmap, emojiPositionX, emojiPositionY, null);
 
         return resultBitmap;

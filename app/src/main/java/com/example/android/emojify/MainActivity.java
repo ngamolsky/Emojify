@@ -34,7 +34,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -59,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int REQUEST_STORAGE_PERMISSION = 1;
 
-    private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final String FILE_PROVIDER_AUTHORITY = "com.example.android.fileprovider";
     private static final String FILE_PATH_KEY = "file_path";
     private static final String DELETE_STATE_KEY = "delete_state";
@@ -136,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
                     launchCamera();
                 } else {
                     // If you do not get permission, log it and show a Toast
-                    Log.d(LOG_TAG, "onRequestPermissionsResult: PERMISSION DENIED");
+                    Timber.e("onRequestPermissionsResult: PERMISSION DENIED");
                     Toast.makeText(this, R.string.permission_denied, Toast.LENGTH_SHORT).show();
                 }
                 break;
@@ -393,9 +391,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Log deletion status
-        Timber.d("delete path:" + mTempPhotoPath);
-        Timber.d("deleted: " + mIsTempDeleted);
     }
 
     @Override
